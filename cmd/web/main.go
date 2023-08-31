@@ -1,17 +1,19 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
-	"github.com/RazvanING/bookings/pkg/config"
-	"github.com/RazvanING/bookings/pkg/handlers"
-	"github.com/RazvanING/bookings/pkg/render"
+	"github.com/RazvanING/bookings/internal/config"
+	"github.com/RazvanING/bookings/internal/handlers"
+	"github.com/RazvanING/bookings/internal/models"
+	"github.com/RazvanING/bookings/internal/render"
 	"github.com/alexedwards/scs/v2"
 	"log"
 	"net/http"
 	"time"
 )
 
-const portNumber = ":8080"
+const portNumber = ":8082"
 
 var app config.AppConfig
 var session *scs.SessionManager
@@ -19,6 +21,9 @@ var session *scs.SessionManager
 // main is the main application function
 
 func main() {
+	// what am i going to put in the session
+
+	gob.Register(models.Reservation{})
 
 	//change this to true when in production
 
