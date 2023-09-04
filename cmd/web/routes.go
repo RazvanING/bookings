@@ -1,13 +1,14 @@
 package main
 
 import (
+	"github.com/RazvanING/bookings/internal/config"
 	"github.com/RazvanING/bookings/internal/handlers"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"net/http"
 )
 
-func routes() http.Handler {
+func routes(app *config.AppConfig) http.Handler {
 
 	mux := chi.NewRouter()
 

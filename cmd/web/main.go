@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"github.com/RazvanING/bookings/internal/config"
 	"github.com/RazvanING/bookings/internal/handlers"
+	"github.com/RazvanING/bookings/internal/helpers"
 	"github.com/RazvanING/bookings/internal/models"
 	"github.com/RazvanING/bookings/internal/render"
 	"github.com/alexedwards/scs/v2"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -17,17 +19,46 @@ const portNumber = ":8082"
 
 var app config.AppConfig
 var session *scs.SessionManager
+var infoLog *log.Logger
+var errorLog *log.Logger
 
 // main is the main application function
 
 func main() {
-	// what am i going to put in the session
+	// what am I going to put in the session
 
+	err := run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	//http.HandleFunc("/", handlers.Repo.Home)
+	//http.HandleFunc("/about", handlers.Repo.About)
+
+	fmt.Println(fmt.Sprintf("Starting application on port %s", portNumber))
+	// _ = http.ListenAndServe(portNumber, nil)
+	srv := &http.Server{
+		Addr:    portNumber,
+		Handler: routes(&app),
+	}
+
+	err = srv.ListenAndServe()
+	log.Fatal(err)
+}
+
+func run() error {
+	//what am I going to put in the session
 	gob.Register(models.Reservation{})
 
 	//change this to true when in production
 
 	app.InProduction = false
+
+	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+
+	app.InfoLog = infoLog
+
+	app.ErrorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	app.ErrorLog = errorLog
 
 	session = scs.New()
 	//how long a session should last, shorter for more secure applications
@@ -41,6 +72,7 @@ func main() {
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache")
+		return err
 	}
 
 	app.TemplateCache = tc
@@ -49,19 +81,8 @@ func main() {
 
 	repo := handlers.NewRepo(&app)
 	handlers.NewHandlers(repo)
-
 	render.NewTemplates(&app)
+	helpers.NewHelpers(&app)
 
-	//http.HandleFunc("/", handlers.Repo.Home)
-	//http.HandleFunc("/about", handlers.Repo.About)
-
-	fmt.Println(fmt.Sprintf("Starting application on port %s", portNumber))
-	// _ = http.ListenAndServe(portNumber, nil)
-	srv := &http.Server{
-		Addr:    portNumber,
-		Handler: routes(),
-	}
-
-	err = srv.ListenAndServe()
-	log.Fatal(err)
+	return nil
 }
